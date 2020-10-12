@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cm-kube-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-mysql
+      tier: db
+  template:
+    metadata:
+      labels:
+        app: kube-mysql
+        tier: db
+    spec:
+      containers:
+      - image: mysql:5.7
+        name: kube-mysql
+        args:
+          - "--ignore-db-dir=lost+found"
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kube-mysql-secret
+              key: password
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: kube-mysql-persistent-storage
+          mountPath: /var/lib/mysql
+
+      volumes:
+      - name: kube-mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: kube-mysql-pvc
